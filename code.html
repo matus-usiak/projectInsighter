@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+    <label for="txtJson">JSON here:</label>
+    <textarea id="txtJson"></textarea>
+    <button id="btnLoad">Load data</button>
+
+    <script type="text/javascript">
+
+	const loadBtn = document.getElementById('btnLoad');
+    loadBtn.addEventListener('click', fetchData);
+
+	async function fetchData() {
+        const json = JSON.parse(document.getElementById('txtJson').value);
+
+        const ids = [];
+
+        let j = 0;
+        while (j < json.length) {
+            ids.push(json[j].projectId);
+            j++
+        }
+
+        let k = 0;
+        while (k < ids.length) {
+            const langResponse = await fetch('https://deliver.kontent.ai/' + ids[k] + '/languages'); 
+            const langData = await langResponse.json();
+
+            var langCount = langData.languages.length;
+
+            if (langResponse.status == 200 && langCount > 1) {
+                console.log('Project ID: ' + ids[k]);
+                console.log('Number of languages: ' + langCount);
+                console.log('');
+
+                const langCodenames = [];
+
+                let i = 0;
+                while (i < langCount) {
+                    langCodenames.push(langData.languages[i].system.codename);
+                    console.log('Language ' + (i+1) + ': ' + langData.languages[i].system.name + ' - (' + langCodenames[i] + ')'); 
+
+                    const itemsResponse = await fetch('https://deliver.kontent.ai/' + ids[k] + '/items?system.language=' + langCodenames[i] + '&language=' + langCodenames[i] + '&depth=0&limit=1&includetotalcount=true');
+                    const itemsData = await itemsResponse.json();
+
+                    console.log('Number of items: ' + itemsData.pagination.total_count);
+
+                    if (langCodenames.length == langCount) {
+                        console.log('========================================')
+                        console.log('========================================')
+                    }
+                    else {
+                        console.log('----------------------------------------')
+                    }
+                    i++
+                }
+            }
+            else {
+                console.log('err')
+                // break;
+            }
+            k++
+        }
+	}
+	</script>
+</body>
+</html>
